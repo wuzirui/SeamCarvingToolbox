@@ -1,5 +1,6 @@
 from seam_carving.carver import Carver
 import cv2
+import logging
 
 
 filename = './example/image1.jpg'
@@ -20,9 +21,24 @@ def test_load_exmaple_image():
 
 def test_carver_load():
     carver = Carver(filename)
-    img_w, img_h = carver.getImageWHShape()
+    img_h, img_w = carver.getImageShape()
     assert img_w == example_width and img_h == example_height
 
 
-def test_width_minus_1():
-    pass
+def test_get_image_row():
+    carver = Carver(filename)
+    assert carver.getImageRow(0).shape == (959, 3)
+
+
+def test_get_energy_map():
+    carver = Carver(filename)
+    emap = carver.getEnergyMap()
+    assert emap.shape == (960, 959)
+    logging.info(emap)
+
+
+def test_width_shrink():
+    carver = Carver(filename)
+    carver.widthShrink()
+    img_h, img_w = carver.getImageShape()
+    assert img_w == example_width - 1 and img_h == example_height
