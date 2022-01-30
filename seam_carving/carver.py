@@ -8,7 +8,7 @@ class Carver:
     def __init__(self, image_filename):
         self.image = cv2.imread(image_filename)
         self.blur_image = cv2.blur(self.image, [self.blur_size, self.blur_size])
-        self.energy = self._calcImageEnergyMap()
+        self.x_energy, self.y_energy = self._calcImageEnergyMap()
 
     def getImageShape(self):
         return self.image.shape[0], self.image.shape[1]
@@ -17,20 +17,18 @@ class Carver:
         return self.image[row_number]
 
     def getEnergyMap(self):
-        return self.energy
+        return self.x_energy + self.y_energy
 
     def _calcImageEnergyMap(self):
-        b, g, r = cv2.split(self.blur_image)
-        b_energy = np.absolute(cv2.Scharr(b, -1, 1, 0)) + np.absolute(cv2.Scharr(b, -1, 0, 1))
-        g_energy = np.absolute(cv2.Scharr(g, -1, 1, 0)) + np.absolute(cv2.Scharr(g, -1, 0, 1))
-        r_energy = np.absolute(cv2.Scharr(r, -1, 1, 0)) + np.absolute(cv2.Scharr(r, -1, 0, 1))
-        return b_energy + g_energy + r_energy
+        energy_x = np.absolute(cv2.Scharr(self.blur_image, -1, 1, 0))
+        energy_y = np.absolute(cv2.Scharr(self.blur_image, -1, 0, 1))
+        return np.sum(energy_x, axis=2), np.sum(energy_y, axis=2)
 
     def _updateImageEnergyMap(self):
         pass
 
     def _findVerticalSeam(self):
-        return np.zeros(self.image.shape[0])
+        return np.ones(self.image.shape[0])
 
     def widthShrink(self):
         seamIndicies = self._findVerticalSeam()
@@ -46,3 +44,4 @@ class Carver:
             blur[i, :, 2] = np.delete(self.blur_image[i, :, 2], [index])
         self.image = output
         self.blur_image = blur
+        self._updateImageEnergyMap()
